@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/dashjs@latest/dist/dash.all.min.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -172,6 +173,7 @@
         <video id="video-player" class="w-full h-full object-contain" controls playsinline>
          Your browser does not support video playback.
         </video>
+        <div id="youtube-player" class="w-full h-full hidden"></div>
         <div id="player-overlay" class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-950/80 via-slate-900/80 to-blue-950/80">
          <div class="text-center p-8">
           <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-700/20 flex items-center justify-center glow-blue">
@@ -233,7 +235,7 @@
       id: "unique-id-here",
       name: "Channel Name",
       url: "https://yourserver.com/stream.m3u8",
-      type: "m3u8",  // Options: "m3u8" (HLS), "mpd" (DASH), "mp4"
+      type: "m3u8",  // Options: "m3u8" (HLS), "mpd" (DASH), "mp4", "mp3" (Radio), "youtube"
       category: "sports",  // Options: "sports", "movies", "news", "entertainment"
       clearkey_kid: "",  // Optional: DRM Key ID (leave blank if no DRM)
       clearkey_key: ""   // Optional: DRM Key (leave blank if no DRM)
@@ -244,7 +246,7 @@
       // Example channels - EDIT THESE or ADD MORE below:
       {
         id: "tv5",
-        name: "TV5 HD",
+        name: "TV5 Hd",
         url: "https://qp-pldt-live-bpk-02-prod.akamaized.net/bpk-tv/tv5_hd/default1/index.mpd",
         type: "mpd",
         category: "entertainment",
@@ -260,6 +262,15 @@
         clearkey_kid: "",
         clearkey_key: ""
       },
+     {
+        id: "dzrhtv",
+        name: "DZRH TV",
+        url: "QCMsndnFNPY",
+        type: "youtube",
+        category: "news",
+        clearkey_kid: "",
+        clearkey_key: ""
+      },
       // Add more channels here (don't forget the comma after each channel!)
     ];
     
@@ -271,8 +282,10 @@
     let currentChannel = null;
     let hlsInstance = null;
     let dashPlayer = null;
+    let youtubePlayer = null;
     let activeCategory = 'all';
     let searchQuery = '';
+    let isYouTubeReady = false;
 
     // Default Config
     const defaultConfig = {
@@ -371,6 +384,7 @@
     function playChannel(channel) {
       currentChannel = channel;
       const video = document.getElementById('video-player');
+      const youtubeContainer = document.getElementById('youtube-player');
       const overlay = document.getElementById('player-overlay');
       const nowPlaying = document.getElementById('now-playing');
       const nowPlayingName = document.getElementById('now-playing-name');
@@ -385,6 +399,15 @@
         dashPlayer.reset();
         dashPlayer = null;
       }
+      if (youtubePlayer) {
+        youtubePlayer.destroy();
+        youtubePlayer = null;
+      }
+
+      // Hide/show appropriate players
+      video.classList.add('hidden');
+      youtubeContainer.classList.add('hidden');
+      video.src = '';
 
       overlay.classList.add('hidden');
       nowPlaying.classList.remove('hidden');
@@ -394,13 +417,47 @@
       const typeColors = {
         'm3u8': 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-400',
         'mpd': 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-400',
-        'mp4': 'bg-gradient-to-r from-orange-500 to-orange-600 border-orange-400'
+        'mp4': 'bg-gradient-to-r from-orange-500 to-orange-600 border-orange-400',
+        'mp3': 'bg-gradient-to-r from-pink-500 to-pink-600 border-pink-400',
+        'youtube': 'bg-gradient-to-r from-red-500 to-red-600 border-red-400'
       };
       streamBadge.className = `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${typeColors[channel.type] || 'bg-blue-500'} border`;
-      streamBadge.textContent = channel.type.toUpperCase();
+      streamBadge.textContent = channel.type === 'mp3' ? 'RADIO' : channel.type.toUpperCase();
 
       try {
-        if (channel.type === 'm3u8') {
+        if (channel.type === 'youtube') {
+          // YouTube player
+          video.classList.add('hidden');
+          youtubeContainer.classList.remove('hidden');
+          
+          if (!isYouTubeReady) {
+            showToast('YouTube player is loading...', 'info');
+            setTimeout(() => playChannel(channel), 1000);
+            return;
+          }
+
+          youtubePlayer = new YT.Player('youtube-player', {
+            height: '100%',
+            width: '100%',
+            videoId: channel.url,
+            playerVars: {
+              autoplay: 1,
+              controls: 1,
+              modestbranding: 1,
+              rel: 0,
+              showinfo: 0,
+              fs: 1,
+              playsinline: 1
+            },
+            events: {
+              onError: () => {
+                showToast('Error loading YouTube video', 'error');
+              }
+            }
+          });
+        } else if (channel.type === 'm3u8') {
+          // HLS player
+          video.classList.remove('hidden');
           if (Hls.isSupported()) {
             hlsInstance = new Hls();
             hlsInstance.loadSource(channel.url);
@@ -418,6 +475,8 @@
             video.play().catch(() => {});
           }
         } else if (channel.type === 'mpd') {
+          // DASH player
+          video.classList.remove('hidden');
           dashPlayer = dashjs.MediaPlayer().create();
           
           if (channel.clearkey_kid && channel.clearkey_key) {
@@ -435,7 +494,9 @@
           dashPlayer.on(dashjs.MediaPlayer.events.ERROR, () => {
             showToast('Error loading DASH stream', 'error');
           });
-        } else {
+        } else if (channel.type === 'mp4' || channel.type === 'mp3') {
+          // Direct video/audio
+          video.classList.remove('hidden');
           video.src = channel.url;
           video.play().catch(() => {});
         }
@@ -515,7 +576,12 @@
       renderChannels();
     }
 
+    // YouTube API ready callback
+    window.onYouTubeIframeAPIReady = function() {
+      isYouTubeReady = true;
+    };
+
     initApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c537870c3a37b39',t:'MTc2OTYzNDU2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c53c0fd9492527e',t:'MTc2OTYzNzUzNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
