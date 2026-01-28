@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vonnhost IPTV Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dashjs@latest/dist/dash.all.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Rajdhani', sans-serif;
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #001845 0%, #002855 25%, #003875 50%, #002855 75%, #001845 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    .glass-card {
+      background: rgba(0, 100, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .channel-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+    }
+    
+    .glow-blue {
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3);
+    }
+    
+    .pulse-dot {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
+    
+    .video-container {
+      aspect-ratio: 16 / 9;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-track {
+      background: rgba(0, 50, 150, 0.2);
+      border-radius: 4px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 4px;
+    }
+    
+    .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    }
+
+    .tab-active {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    .input-glow:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .modal-overlay {
+      background: rgba(0, 10, 30, 0.85);
+      backdrop-filter: blur(6px);
+    }
+
+    .admin-panel-enter {
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .floating-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 40;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .live-badge {
+      animation: livePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+      50% { opacity: 0.8; box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full gradient-bg text-white overflow-auto scrollbar-custom"><!-- Header -->
+   <header class="sticky top-0 z-30 glass-card border-b border-blue-400/20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center glow-blue relative">
+        <svg class="w-7 h-7" fill="currentColor" viewbox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8l7 4-7 4V8z" />
+        </svg>
+        <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full live-badge"></div>
+       </div>
+       <div>
+        <h1 id="portal-title" class="text-2xl font-bold tracking-wide bg-gradient-to-r from-blue-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">Vonnhost IPTV Portal</h1>
+        <p id="welcome-text" class="text-xs text-blue-300/80 tracking-wide">Premium Streaming Experience</p>
+       </div>
+      </div>
+      <div class="flex items-center gap-4">
+       <div class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg glass-card"><span class="w-2 h-2 rounded-full bg-green-400 pulse-dot"></span> <span id="channel-count" class="text-sm font-medium text-blue-200">0 Channels</span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </header><!-- Main Content -->
+   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><!-- Video Player Section -->
+     <div class="lg:col-span-2">
+      <div class="glass-card rounded-2xl overflow-hidden shadow-2xl">
+       <div class="video-container bg-black relative">
+        <video id="video-player" class="w-full h-full object-contain" controls playsinline>
+         Your browser does not support video playback.
+        </video>
+        <div id="player-overlay" class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-950/80 via-slate-900/80 to-blue-950/80">
+         <div class="text-center p-8">
+          <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-700/20 flex items-center justify-center glow-blue">
+           <svg class="w-10 h-10 text-blue-400" fill="currentColor" viewbox="0 0 24 24"><path d="M8 5v14l11-7z" />
+           </svg>
+          </div>
+          <p class="text-xl font-semibold text-blue-300 mb-2">Ready to Stream</p>
+          <p class="text-sm text-blue-400/70">Select a channel from the list to begin</p>
+         </div>
+        </div>
+       </div>
+       <div id="now-playing" class="p-5 border-t border-blue-400/20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 hidden">
+        <div class="flex items-center gap-3">
+         <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse ring-2 ring-red-500/30"></div>
+         <div class="flex-1">
+          <p class="text-xs text-blue-300/80 uppercase tracking-wider mb-0.5">Live Now</p>
+          <p id="now-playing-name" class="font-bold text-white text-lg tracking-wide"></p>
+         </div>
+         <div id="stream-type-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></div>
+        </div>
+       </div>
+      </div>
+     </div><!-- Channel List Section -->
+     <div class="lg:col-span-1">
+      <div class="glass-card rounded-2xl overflow-hidden h-full max-h-[650px] flex flex-col shadow-2xl">
+       <div class="p-5 border-b border-blue-400/20 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
+        <h2 class="font-bold text-white text-lg mb-4 uppercase tracking-wider flex items-center gap-2">
+         <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewbox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+         </svg> Channels</h2><!-- Search -->
+        <div class="relative">
+         <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/70" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+         </svg><input id="search-input" type="text" placeholder="Search channels..." class="w-full pl-10 pr-4 py-2.5 bg-blue-950/30 border border-blue-500/30 rounded-lg text-sm text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all">
+        </div>
+       </div><!-- Category Tabs -->
+       <div class="px-4 py-3 flex gap-2 overflow-x-auto scrollbar-custom border-b border-blue-400/20 bg-blue-950/20"><button class="category-tab tab-active px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all uppercase tracking-wider" data-category="all">All</button> <button class="category-tab px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-blue-500/10 hover:bg-blue-500/20 transition-all border border-blue-500/20 uppercase tracking-wider" data-category="sports">Sports</button> <button class="category-tab px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-blue-500/10 hover:bg-blue-500/20 transition-all border border-blue-500/20 uppercase tracking-wider" data-category="movies">Movies</button> <button class="category-tab px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-blue-500/10 hover:bg-blue-500/20 transition-all border border-blue-500/20 uppercase tracking-wider" data-category="news">News</button> <button class="category-tab px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-blue-500/10 hover:bg-blue-500/20 transition-all border border-blue-500/20 uppercase tracking-wider" data-category="entertainment">Entertainment</button>
+       </div><!-- Channel List -->
+       <div id="channel-list" class="flex-1 overflow-y-auto scrollbar-custom p-4 space-y-2">
+        <div class="text-center py-12 text-blue-300/50">
+         <svg class="w-16 h-16 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+         </svg>
+         <p class="text-sm font-semibold">No channels available</p>
+         <p class="text-xs mt-1">Use the admin panel to add channels</p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </main><!-- Floating Admin Button --> <button id="admin-btn" class="floating-btn btn-primary w-14 h-14 rounded-full flex items-center justify-center shadow-2xl">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg></button> <!-- Login Modal -->
+   <div id="login-modal" class="fixed inset-0 z-[60] hidden">
+    <div class="modal-overlay absolute inset-0"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+     <div class="glass-card rounded-2xl w-full max-w-sm p-8 shadow-2xl border-2 border-blue-400/30">
+      <div class="text-center mb-6">
+       <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center glow-blue">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+       </div>
+       <h3 class="text-2xl font-bold text-white mb-2 uppercase tracking-wide">Admin Login</h3>
+       <p class="text-sm text-blue-300/70">Enter credentials to access admin panel</p>
+      </div>
+      <form id="login-form" class="space-y-4">
+       <div><label for="login-username" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Username</label> <input type="text" id="login-username" required autocomplete="username" class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all" placeholder="Enter username">
+       </div>
+       <div><label for="login-password" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Password</label> <input type="password" id="login-password" required autocomplete="current-password" class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all" placeholder="Enter password">
+       </div>
+       <div id="login-error" class="hidden text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg><span>Invalid username or password</span>
+       </div>
+       <div class="flex gap-3 pt-2"><button type="button" id="cancel-login-btn" class="flex-1 px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg font-bold uppercase tracking-wider transition-all text-sm">Cancel</button> <button type="submit" id="submit-login-btn" class="flex-1 btn-primary px-4 py-3 rounded-lg font-bold uppercase tracking-wider transition-all text-sm">Login</button>
+       </div>
+      </form>
+     </div>
+    </div>
+   </div><!-- Admin Panel Overlay -->
+   <div id="admin-panel" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0" id="admin-backdrop"></div>
+    <div class="absolute inset-y-0 right-0 w-full sm:w-[480px] admin-panel-enter">
+     <div class="h-full glass-card border-l border-blue-400/30 flex flex-col shadow-2xl"><!-- Admin Header -->
+      <div class="p-6 border-b border-blue-400/20 bg-gradient-to-r from-blue-500/20 to-purple-500/20">
+       <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+         <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+         </div>
+         <h2 class="text-xl font-bold text-white uppercase tracking-wide">Admin Panel</h2>
+        </div><button id="close-admin-btn" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+         </svg></button>
+       </div><button id="add-channel-btn" class="w-full btn-primary px-4 py-3 rounded-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg> Add New Channel </button>
+      </div><!-- Channel Management List -->
+      <div class="flex-1 overflow-y-auto scrollbar-custom p-6">
+       <h3 class="text-sm font-bold text-blue-300 mb-4 uppercase tracking-wider">Manage Channels</h3>
+       <div id="admin-channel-list" class="space-y-3">
+        <div class="text-center py-12 text-blue-300/50">
+         <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+         </svg>
+         <p class="text-sm">No channels to manage</p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Add Channel Modal -->
+   <div id="add-modal" class="fixed inset-0 z-[60] hidden">
+    <div class="modal-overlay absolute inset-0" id="modal-backdrop"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+     <div class="glass-card rounded-2xl w-full max-w-md max-h-[90%] overflow-y-auto scrollbar-custom shadow-2xl">
+      <div class="p-6">
+       <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-white uppercase tracking-wide">Add New Channel</h3><button id="close-modal-btn" class="p-2 hover:bg-white/10 rounded-lg transition-colors">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+         </svg></button>
+       </div>
+       <form id="add-channel-form" class="space-y-4">
+        <div><label for="channel-name" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Channel Name *</label> <input type="text" id="channel-name" required class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all" placeholder="e.g., Sports HD">
+        </div>
+        <div><label for="channel-url" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Stream URL *</label> <input type="url" id="channel-url" required class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all text-sm" placeholder="https://example.com/stream.m3u8">
+        </div>
+        <div><label for="channel-type" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Stream Type *</label> <select id="channel-type" required class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white focus:outline-none input-glow transition-all"> <option value="m3u8">M3U8 (HLS)</option> <option value="mpd">MPD (DASH)</option> <option value="mp4">Direct MP4</option> </select>
+        </div>
+        <div><label for="channel-category" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Category</label> <select id="channel-category" class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white focus:outline-none input-glow transition-all"> <option value="entertainment">Entertainment</option> <option value="sports">Sports</option> <option value="movies">Movies</option> <option value="news">News</option> </select>
+        </div><!-- DRM Section -->
+        <div class="border-t border-blue-500/20 pt-4">
+         <div class="flex items-center gap-3 mb-4"><input type="checkbox" id="enable-drm" class="w-5 h-5 rounded border-blue-500/30 bg-blue-950/30 text-blue-500 focus:ring-blue-500/30 cursor-pointer"> <label for="enable-drm" class="text-sm font-bold text-blue-300 uppercase tracking-wider cursor-pointer">Enable ClearKey DRM</label>
+         </div>
+         <div id="drm-fields" class="space-y-3 hidden">
+          <div><label for="clearkey-kid" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Key ID (KID)</label> <input type="text" id="clearkey-kid" class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all font-mono text-sm" placeholder="e.g., 0123456789abcdef">
+          </div>
+          <div><label for="clearkey-key" class="block text-sm font-bold text-blue-300 mb-2 uppercase tracking-wider">Key</label> <input type="text" id="clearkey-key" class="w-full px-4 py-3 bg-blue-950/30 border border-blue-500/30 rounded-lg text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all font-mono text-sm" placeholder="e.g., fedcba9876543210">
+          </div>
+          <p class="text-xs text-blue-300/60">Enter ClearKey credentials in hexadecimal format</p>
+         </div>
+        </div>
+        <div class="flex gap-3 pt-4"><button type="button" id="cancel-modal-btn" class="flex-1 px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg font-bold uppercase tracking-wider transition-all text-sm">Cancel</button> <button type="submit" id="submit-channel-btn" class="flex-1 btn-primary px-4 py-3 rounded-lg font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-sm"> <span>Add Channel</span> </button>
+        </div>
+       </form>
+      </div>
+     </div>
+    </div>
+   </div><!-- Delete Confirmation -->
+   <div id="delete-confirm" class="fixed inset-0 z-[60] hidden">
+    <div class="modal-overlay absolute inset-0" id="delete-backdrop"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+     <div class="glass-card rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+      <div class="text-center">
+       <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center ring-4 ring-red-500/20">
+        <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+       </div>
+       <h3 class="text-lg font-bold text-white mb-2 uppercase tracking-wide">Delete Channel?</h3>
+       <p id="delete-channel-name" class="text-sm text-blue-300/80 mb-6"></p>
+       <div class="flex gap-3"><button id="cancel-delete-btn" class="flex-1 px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg font-bold uppercase tracking-wider transition-all text-sm">Cancel</button> <button id="confirm-delete-btn" class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 rounded-lg font-bold uppercase tracking-wider transition-all text-sm shadow-lg">Delete</button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Toast Messages -->
+   <div id="toast-container" class="fixed bottom-4 left-4 z-50 space-y-2"></div>
+  </div>
+  <script>
+    // Application State
+    let channels = [];
+    let currentChannel = null;
+    let hlsInstance = null;
+    let dashPlayer = null;
+    let channelToDelete = null;
+    let activeCategory = 'all';
+    let searchQuery = '';
+    let isAuthenticated = false;
+
+    // Admin credentials
+    const ADMIN_USER = 'vonnhost';
+    const ADMIN_PASS = 'vonnhost';
+
+    // Default Config
+    const defaultConfig = {
+      portal_title: 'Vonnhost IPTV Portal',
+      welcome_text: 'Premium Streaming Experience',
+      background_color: '#001845',
+      accent_color: '#3b82f6',
+      text_color: '#ffffff',
+      card_color: 'rgba(0, 100, 255, 0.08)',
+      highlight_color: '#60a5fa'
+    };
+
+    // Config reference
+    let config = { ...defaultConfig };
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-gradient-to-r from-green-500 to-green-600' : type === 'error' ? 'bg-gradient-to-r from-red-500 to-red-600' : 'bg-gradient-to-r from-blue-500 to-blue-600';
+      
+      toast.className = `${bgColor} px-5 py-3 rounded-xl shadow-2xl text-sm font-bold text-white flex items-center gap-3 transform -translate-x-full transition-transform duration-300 border border-white/20`;
+      toast.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${type === 'success' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>' : 
+            type === 'error' ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>' :
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+        </svg>
+        <span>${message}</span>
+      `;
+      
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('-translate-x-full');
+      });
+      
+      setTimeout(() => {
+        toast.classList.add('-translate-x-full');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Render channel list
+    function renderChannels() {
+      const container = document.getElementById('channel-list');
+      const adminContainer = document.getElementById('admin-channel-list');
+      const filtered = channels.filter(ch => {
+        const matchesCategory = activeCategory === 'all' || ch.category === activeCategory;
+        const matchesSearch = ch.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+
+      document.getElementById('channel-count').textContent = `${channels.length} Channel${channels.length !== 1 ? 's' : ''}`;
+
+      // Render public channel list
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-blue-300/50">
+            <svg class="w-16 h-16 mx-auto mb-4 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            <p class="text-sm font-semibold">${channels.length === 0 ? 'No channels available' : 'No channels found'}</p>
+            <p class="text-xs mt-1">${channels.length === 0 ? 'Use the admin panel to add channels' : 'Try adjusting your search or category'}</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = filtered.map(ch => `
+          <div class="channel-card glass-card rounded-xl p-3 cursor-pointer transition-all duration-200 border border-blue-500/20 ${currentChannel && currentChannel.id === ch.id ? 'ring-2 ring-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/30' : 'hover:bg-blue-500/10 hover:border-blue-400/40'}" data-id="${ch.__backendId}">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center flex-shrink-0 border border-blue-400/30">
+                <svg class="w-6 h-6 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-white truncate tracking-wide">${ch.name}</p>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-xs px-2 py-0.5 rounded bg-blue-500/30 text-blue-200 uppercase font-bold tracking-wider border border-blue-400/30">${ch.type}</span>
+                  <span class="text-xs text-blue-300/70 capitalize font-semibold">${ch.category}</span>
+                  ${ch.clearkey_kid ? '<span class="text-xs px-2 py-0.5 rounded bg-green-500/30 text-green-200 font-bold uppercase tracking-wider border border-green-400/30">DRM</span>' : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('.channel-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const id = card.dataset.id;
+            const channel = channels.find(ch => ch.__backendId === id);
+            if (channel) playChannel(channel);
+          });
+        });
+      }
+
+      // Render admin channel list
+      if (channels.length === 0) {
+        adminContainer.innerHTML = `
+          <div class="text-center py-12 text-blue-300/50">
+            <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <p class="text-sm">No channels to manage</p>
+          </div>
+        `;
+      } else {
+        adminContainer.innerHTML = channels.map(ch => `
+          <div class="glass-card rounded-xl p-4 border border-blue-500/20 hover:bg-blue-500/10 transition-all">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <p class="font-bold text-white truncate tracking-wide mb-1">${ch.name}</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs px-2 py-1 rounded bg-blue-500/30 text-blue-200 uppercase font-bold tracking-wider border border-blue-400/30">${ch.type}</span>
+                  <span class="text-xs px-2 py-1 rounded bg-purple-500/30 text-purple-200 capitalize font-semibold border border-purple-400/30">${ch.category}</span>
+                  ${ch.clearkey_kid ? '<span class="text-xs px-2 py-1 rounded bg-green-500/30 text-green-200 font-bold uppercase tracking-wider border border-green-400/30">DRM</span>' : ''}
+                </div>
+              </div>
+              <button class="delete-btn p-2 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/30" data-id="${ch.__backendId}" data-name="${ch.name}">
+                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        adminContainer.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            const name = btn.dataset.name;
+            showDeleteConfirm(id, name);
+          });
+        });
+      }
+    }
+
+    // Play channel
+    function playChannel(channel) {
+      currentChannel = channel;
+      const video = document.getElementById('video-player');
+      const overlay = document.getElementById('player-overlay');
+      const nowPlaying = document.getElementById('now-playing');
+      const nowPlayingName = document.getElementById('now-playing-name');
+      const streamBadge = document.getElementById('stream-type-badge');
+
+      // Cleanup previous instances
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+      if (dashPlayer) {
+        dashPlayer.reset();
+        dashPlayer = null;
+      }
+
+      overlay.classList.add('hidden');
+      nowPlaying.classList.remove('hidden');
+      nowPlayingName.textContent = channel.name;
+
+      // Update stream type badge
+      const typeColors = {
+        'm3u8': 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-400',
+        'mpd': 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-400',
+        'mp4': 'bg-gradient-to-r from-orange-500 to-orange-600 border-orange-400'
+      };
+      streamBadge.className = `px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${typeColors[channel.type] || 'bg-blue-500'} border`;
+      streamBadge.textContent = channel.type.toUpperCase();
+
+      try {
+        if (channel.type === 'm3u8') {
+          if (Hls.isSupported()) {
+            hlsInstance = new Hls();
+            hlsInstance.loadSource(channel.url);
+            hlsInstance.attachMedia(video);
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+              video.play().catch(() => {});
+            });
+            hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+              if (data.fatal) {
+                showToast('Error loading HLS stream', 'error');
+              }
+            });
+          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = channel.url;
+            video.play().catch(() => {});
+          }
+        } else if (channel.type === 'mpd') {
+          dashPlayer = dashjs.MediaPlayer().create();
+          
+          if (channel.clearkey_kid && channel.clearkey_key) {
+            const protectionData = {
+              'org.w3.clearkey': {
+                'clearkeys': {
+                  [channel.clearkey_kid]: channel.clearkey_key
+                }
+              }
+            };
+            dashPlayer.setProtectionData(protectionData);
+          }
+          
+          dashPlayer.initialize(video, channel.url, true);
+          dashPlayer.on(dashjs.MediaPlayer.events.ERROR, () => {
+            showToast('Error loading DASH stream', 'error');
+          });
+        } else {
+          video.src = channel.url;
+          video.play().catch(() => {});
+        }
+
+        showToast(`Now Playing: ${channel.name}`, 'info');
+        renderChannels();
+      } catch (err) {
+        showToast('Failed to play channel', 'error');
+      }
+    }
+
+    // Show delete confirmation
+    function showDeleteConfirm(id, name) {
+      channelToDelete = id;
+      document.getElementById('delete-channel-name').textContent = `"${name}" will be permanently removed.`;
+      document.getElementById('delete-confirm').classList.remove('hidden');
+    }
+
+    // Modal handlers
+    function openLoginModal() {
+      document.getElementById('login-modal').classList.remove('hidden');
+      document.getElementById('login-error').classList.add('hidden');
+      document.getElementById('login-form').reset();
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.add('hidden');
+      document.getElementById('login-form').reset();
+      document.getElementById('login-error').classList.add('hidden');
+    }
+
+    function openAdminPanel() {
+      if (!isAuthenticated) {
+        openLoginModal();
+        return;
+      }
+      document.getElementById('admin-panel').classList.remove('hidden');
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('admin-panel').classList.add('hidden');
+    }
+
+    function openModal() {
+      document.getElementById('add-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('add-modal').classList.add('hidden');
+      document.getElementById('add-channel-form').reset();
+      document.getElementById('drm-fields').classList.add('hidden');
+      document.getElementById('enable-drm').checked = false;
+    }
+
+    function closeDeleteConfirm() {
+      document.getElementById('delete-confirm').classList.add('hidden');
+      channelToDelete = null;
+    }
+
+    // Data handler for SDK
+    const dataHandler = {
+      onDataChanged(data) {
+        channels = data;
+        renderChannels();
+      }
+    };
+
+    // Initialize app
+    async function initApp() {
+      // Initialize Element SDK
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (newConfig) => {
+            config = { ...defaultConfig, ...newConfig };
+            document.getElementById('portal-title').textContent = config.portal_title || defaultConfig.portal_title;
+            document.getElementById('welcome-text').textContent = config.welcome_text || defaultConfig.welcome_text;
+          },
+          mapToCapabilities: (cfg) => ({
+            recolorables: [
+              {
+                get: () => cfg.background_color || defaultConfig.background_color,
+                set: (v) => { cfg.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+              },
+              {
+                get: () => cfg.accent_color || defaultConfig.accent_color,
+                set: (v) => { cfg.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }
+              },
+              {
+                get: () => cfg.text_color || defaultConfig.text_color,
+                set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+              },
+              {
+                get: () => cfg.card_color || defaultConfig.card_color,
+                set: (v) => { cfg.card_color = v; window.elementSdk.setConfig({ card_color: v }); }
+              },
+              {
+                get: () => cfg.highlight_color || defaultConfig.highlight_color,
+                set: (v) => { cfg.highlight_color = v; window.elementSdk.setConfig({ highlight_color: v }); }
+              }
+            ],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (cfg) => new Map([
+            ['portal_title', cfg.portal_title || defaultConfig.portal_title],
+            ['welcome_text', cfg.welcome_text || defaultConfig.welcome_text]
+          ])
+        });
+      }
+
+      // Initialize Data SDK
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          showToast('Failed to initialize data storage', 'error');
+        }
+      }
+
+      // Event listeners
+      document.getElementById('admin-btn').addEventListener('click', openAdminPanel);
+      document.getElementById('close-admin-btn').addEventListener('click', closeAdminPanel);
+      document.getElementById('admin-backdrop').addEventListener('click', closeAdminPanel);
+
+      // Login form handlers
+      document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        
+        if (username === ADMIN_USER && password === ADMIN_PASS) {
+          isAuthenticated = true;
+          closeLoginModal();
+          openAdminPanel();
+          showToast('Login successful! Welcome admin.', 'success');
+        } else {
+          document.getElementById('login-error').classList.remove('hidden');
+        }
+      });
+
+      document.getElementById('cancel-login-btn').addEventListener('click', closeLoginModal);
+      
+      document.getElementById('add-channel-btn').addEventListener('click', openModal);
+      document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+      document.getElementById('cancel-modal-btn').addEventListener('click', closeModal);
+      document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+
+      document.getElementById('enable-drm').addEventListener('change', (e) => {
+        document.getElementById('drm-fields').classList.toggle('hidden', !e.target.checked);
+      });
+
+      document.getElementById('add-channel-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (channels.length >= 999) {
+          showToast('Maximum channel limit reached (999)', 'error');
+          return;
+        }
+
+        const submitBtn = document.getElementById('submit-channel-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="animate-spin">⏳</span> Adding...';
+
+        const channelData = {
+          id: Date.now().toString(),
+          name: document.getElementById('channel-name').value.trim(),
+          url: document.getElementById('channel-url').value.trim(),
+          type: document.getElementById('channel-type').value,
+          category: document.getElementById('channel-category').value,
+          clearkey_kid: document.getElementById('enable-drm').checked ? document.getElementById('clearkey-kid').value.trim() : '',
+          clearkey_key: document.getElementById('enable-drm').checked ? document.getElementById('clearkey-key').value.trim() : '',
+          created_at: new Date().toISOString()
+        };
+
+        if (window.dataSdk) {
+          const result = await window.dataSdk.create(channelData);
+          if (result.isOk) {
+            showToast('Channel added successfully!', 'success');
+            closeModal();
+          } else {
+            showToast('Failed to add channel', 'error');
+          }
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Add Channel</span>';
+      });
+
+      // Delete confirmation handlers
+      document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteConfirm);
+      document.getElementById('delete-backdrop').addEventListener('click', closeDeleteConfirm);
+      
+      document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+        if (!channelToDelete) return;
+        
+        const btn = document.getElementById('confirm-delete-btn');
+        btn.disabled = true;
+        btn.textContent = 'Deleting...';
+
+        const channel = channels.find(ch => ch.__backendId === channelToDelete);
+        if (channel && window.dataSdk) {
+          const result = await window.dataSdk.delete(channel);
+          if (result.isOk) {
+            if (currentChannel && currentChannel.__backendId === channelToDelete) {
+              currentChannel = null;
+              document.getElementById('video-player').src = '';
+              document.getElementById('player-overlay').classList.remove('hidden');
+              document.getElementById('now-playing').classList.add('hidden');
+            }
+            showToast('Channel deleted successfully', 'success');
+          } else {
+            showToast('Failed to delete channel', 'error');
+          }
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+        closeDeleteConfirm();
+      });
+
+      // Search handler
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderChannels();
+      });
+
+      // Category tabs
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.category-tab').forEach(t => {
+            t.classList.remove('tab-active');
+            t.classList.add('bg-blue-500/10', 'border', 'border-blue-500/20');
+          });
+          tab.classList.add('tab-active');
+          tab.classList.remove('bg-blue-500/10', 'border', 'border-blue-500/20');
+          activeCategory = tab.dataset.category;
+          renderChannels();
+        });
+      });
+
+      renderChannels();
+    }
+
+    initApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c5066bd2186ce76',t:'MTc2OTYwMjM4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
