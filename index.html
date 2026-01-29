@@ -3,10 +3,10 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vonnhost IPTV Portal</title>
+  <title>VONN TV Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dashjs@latest/dist/dash.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.min.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@
     }
     
     .gradient-bg {
-      background: linear-gradient(135deg, #001845 0%, #002855 25%, #003875 50%, #002855 75%, #001845 100%);
+      background: linear-gradient(135deg, #001a3d 0%, #003d1a 25%, #3d1a00 50%, #001a3d 75%, #003d1a 100%);
       background-size: 400% 400%;
       animation: gradientShift 15s ease infinite;
     }
@@ -32,16 +32,16 @@
     .glass-card {
       background: rgba(0, 100, 255, 0.08);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(34, 197, 94, 0.3);
     }
     
     .channel-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+      box-shadow: 0 8px 30px rgba(249, 115, 22, 0.5);
     }
     
     .glow-blue {
-      box-shadow: 0 0 30px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 0 30px rgba(249, 115, 22, 0.6), 0 0 60px rgba(34, 197, 94, 0.4);
     }
     
     .pulse-dot {
@@ -68,32 +68,32 @@
     }
     
     .scrollbar-custom::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, #f97316 0%, #22c55e 100%);
       border-radius: 4px;
     }
     
     .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      background: linear-gradient(135deg, #fb923c 0%, #4ade80 100%);
     }
 
     .tab-active {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      background: linear-gradient(135deg, #f97316 0%, #22c55e 100%);
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
     }
 
     .input-glow:focus {
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.3);
+      border-color: rgba(34, 197, 94, 0.5);
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+      background: linear-gradient(135deg, #f97316 0%, #22c55e 100%);
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
     }
 
     .btn-primary:hover {
-      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+      background: linear-gradient(135deg, #fb923c 0%, #4ade80 100%);
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
       transform: translateY(-1px);
     }
 
@@ -148,14 +148,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
      <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center glow-blue relative">
+       <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 via-green-500 to-blue-600 flex items-center justify-center glow-blue relative">
         <svg class="w-7 h-7" fill="currentColor" viewbox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM9 8l7 4-7 4V8z" />
         </svg>
         <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full live-badge"></div>
        </div>
        <div>
-        <h1 id="portal-title" class="text-2xl font-bold tracking-wide bg-gradient-to-r from-blue-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">Vonnhost IPTV Portal</h1>
-        <p id="welcome-text" class="text-xs text-blue-300/80 tracking-wide">Premium Streaming Experience</p>
+        <h1 id="portal-title" class="text-2xl font-bold tracking-wide bg-gradient-to-r from-orange-400 via-green-400 to-blue-400 bg-clip-text text-transparent">VONN TV Portal</h1>
+        <p id="welcome-text" class="text-xs text-green-300/80 tracking-wide">Premium Streaming Experience</p>
        </div>
       </div>
       <div class="flex items-center gap-4">
@@ -174,14 +174,14 @@
          Your browser does not support video playback.
         </video>
         <div id="youtube-player" class="w-full h-full hidden"></div>
-        <div id="player-overlay" class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-950/80 via-slate-900/80 to-blue-950/80">
+        <div id="player-overlay" class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-orange-950/80 via-green-950/80 to-blue-950/80">
          <div class="text-center p-8">
-          <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-700/20 flex items-center justify-center glow-blue">
-           <svg class="w-10 h-10 text-blue-400" fill="currentColor" viewbox="0 0 24 24"><path d="M8 5v14l11-7z" />
+          <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500/20 via-green-500/20 to-blue-500/20 flex items-center justify-center glow-blue">
+           <svg class="w-10 h-10 text-orange-400" fill="currentColor" viewbox="0 0 24 24"><path d="M8 5v14l11-7z" />
            </svg>
           </div>
-          <p class="text-xl font-semibold text-blue-300 mb-2">Ready to Stream</p>
-          <p class="text-sm text-blue-400/70">Select a channel from the list to begin</p>
+          <p class="text-xl font-semibold text-orange-300 mb-2">Ready to Stream</p>
+          <p class="text-sm text-green-400/70">Select a channel from the list to begin</p>
          </div>
         </div>
        </div>
@@ -201,10 +201,10 @@
       <div class="glass-card rounded-2xl overflow-hidden h-full max-h-[650px] flex flex-col shadow-2xl">
        <div class="p-5 border-b border-blue-400/20 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
         <h2 class="font-bold text-white text-lg mb-4 uppercase tracking-wider flex items-center gap-2">
-         <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewbox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+         <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewbox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
          </svg> Channels</h2><!-- Search -->
         <div class="relative">
-         <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-400/70" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+         <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-green-400/70" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
          </svg><input id="search-input" type="text" placeholder="Search channels..." class="w-full pl-10 pr-4 py-2.5 bg-blue-950/30 border border-blue-500/30 rounded-lg text-sm text-white placeholder-blue-300/50 focus:outline-none input-glow transition-all">
         </div>
        </div><!-- Category Tabs -->
@@ -243,17 +243,16 @@
     */
     
     let channels = [
-      // Example channels - EDIT THESE or ADD MORE below:
       {
         id: "tv5",
-        name: "TV5 Hd",
+        name: "TV5 HD",
         url: "https://qp-pldt-live-bpk-02-prod.akamaized.net/bpk-tv/tv5_hd/default1/index.mpd",
         type: "mpd",
         category: "entertainment",
         clearkey_kid: "2615129ef2c846a9bbd43a641c7303ef",
         clearkey_key: "07c7f996b1734ea288641a68e1cfdc4d"
       },
-     {
+      {
         id: "kapatid",
         name: "Kapatid Channel",
         url: "https://qp-pldt-live-bpk-02-prod.akamaized.net/bpk-tv/pphd_sdi1/default/index.mpd",
@@ -262,7 +261,7 @@
         clearkey_kid: "dbf670bed2ea4905a114557e90e7ffb6",
         clearkey_key: "616059bec8dfb27f3524b7e7c31b6cff"
       },
-     {
+      {
         id: "wiltv",
         name: "Wil TV",
         url: "https://qp-pldt-live-bpk-02-prod.akamaized.net/bpk-tv/wiltv/default/index.mpd",
@@ -271,7 +270,7 @@
         clearkey_kid: "b1773d6f982242cdb0f694546a3db26f",
         clearkey_key: "ae9a90dbea78f564eb98fe817909ec9a"
       },
-     {
+      {
         id: "sdtvph",
         name: "SDTV PH",
         url: "https://live20.bozztv.com/giatv/giatv-SDTVPH/SDTVPH/playlist.m3u8",
@@ -280,7 +279,7 @@
         clearkey_kid: "",
         clearkey_key: ""
       },
-     {
+      {
         id: "sdtvglobal",
         name: "SDTV GLOBAL",
         url: "https://live20.bozztv.com/giatvplayout7/giatv-210938/tracks-v1a1/mono.ts.m3u8",
@@ -289,7 +288,7 @@
         clearkey_kid: "",
         clearkey_key: ""
       },
-     {
+      {
         id: "tvmaria",
         name: "TV MARIA",
         url: "L-IgLRT2TD0",
@@ -298,7 +297,7 @@
         clearkey_kid: "",
         clearkey_key: ""
       },
-     {
+      {
         id: "gma7",
         name: "GMA 7",
         url: "https://gsattv.akamaized.net/live/media0/gma7/Fairplay/gma7.m3u8",
@@ -307,7 +306,7 @@
         clearkey_kid: "",
         clearkey_key: ""
       },
-     {
+      {
         id: "dzrhtv",
         name: "DZRH TV",
         url: "QCMsndnFNPY",
@@ -315,18 +314,18 @@
         category: "news",
         clearkey_kid: "",
         clearkey_key: ""
-      },
+      }
       // Add more channels here (don't forget the comma after each channel!)
     ];
     
-    // 📺 ========================================
+    // ���� ========================================
     // 📺 END OF CHANNEL LIST
     // 📺 ========================================
 
     // Application State
     let currentChannel = null;
     let hlsInstance = null;
-    let dashPlayer = null;
+    let shakaPlayer = null;
     let youtubePlayer = null;
     let activeCategory = 'all';
     let searchQuery = '';
@@ -334,13 +333,13 @@
 
     // Default Config
     const defaultConfig = {
-      portal_title: 'Vonnhost IPTV Portal',
+      portal_title: 'VONN TV Portal',
       welcome_text: 'Premium Streaming Experience',
-      background_color: '#001845',
-      accent_color: '#3b82f6',
+      background_color: '#001a3d',
+      accent_color: '#f97316',
       text_color: '#ffffff',
-      card_color: 'rgba(0, 100, 255, 0.08)',
-      highlight_color: '#60a5fa'
+      card_color: 'rgba(249, 115, 22, 0.08)',
+      highlight_color: '#22c55e'
     };
 
     // Config reference
@@ -398,8 +397,8 @@
         container.innerHTML = filtered.map(ch => `
           <div class="channel-card glass-card rounded-xl p-3 cursor-pointer transition-all duration-200 border border-blue-500/20 ${currentChannel && currentChannel.id === ch.id ? 'ring-2 ring-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/30' : 'hover:bg-blue-500/10 hover:border-blue-400/40'}" data-id="${ch.id}">
             <div class="flex items-center gap-3">
-              <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center flex-shrink-0 border border-blue-400/30">
-                <svg class="w-6 h-6 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
+              <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-orange-500/30 via-green-500/30 to-blue-500/30 flex items-center justify-center flex-shrink-0 border border-orange-400/30">
+                <svg class="w-6 h-6 text-orange-300" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               </div>
@@ -426,7 +425,7 @@
     }
 
     // Play channel
-    function playChannel(channel) {
+    async function playChannel(channel) {
       currentChannel = channel;
       const video = document.getElementById('video-player');
       const youtubeContainer = document.getElementById('youtube-player');
@@ -440,9 +439,9 @@
         hlsInstance.destroy();
         hlsInstance = null;
       }
-      if (dashPlayer) {
-        dashPlayer.reset();
-        dashPlayer = null;
+      if (shakaPlayer) {
+        await shakaPlayer.destroy();
+        shakaPlayer = null;
       }
       if (youtubePlayer) {
         youtubePlayer.destroy();
@@ -520,24 +519,33 @@
             video.play().catch(() => {});
           }
         } else if (channel.type === 'mpd') {
-          // DASH player
+          // DASH player with Shaka Player
           video.classList.remove('hidden');
-          dashPlayer = dashjs.MediaPlayer().create();
           
+          shakaPlayer = new shaka.Player(video);
+          
+          // Configure DRM if clearkey provided
           if (channel.clearkey_kid && channel.clearkey_key) {
-            const protectionData = {
-              'org.w3.clearkey': {
-                'clearkeys': {
+            shakaPlayer.configure({
+              drm: {
+                clearKeys: {
                   [channel.clearkey_kid]: channel.clearkey_key
                 }
               }
-            };
-            dashPlayer.setProtectionData(protectionData);
+            });
           }
           
-          dashPlayer.initialize(video, channel.url, true);
-          dashPlayer.on(dashjs.MediaPlayer.events.ERROR, () => {
+          try {
+            await shakaPlayer.load(channel.url);
+            video.play().catch(() => {});
+          } catch (error) {
             showToast('Error loading DASH stream', 'error');
+            console.error('Shaka Player error:', error);
+          }
+          
+          shakaPlayer.addEventListener('error', (event) => {
+            console.error('Shaka Player error event:', event);
+            showToast('Error during playback', 'error');
           });
         } else if (channel.type === 'mp4' || channel.type === 'mp3') {
           // Direct video/audio
@@ -555,6 +563,14 @@
 
     // Initialize app
     async function initApp() {
+      // Install Shaka Player polyfills
+      shaka.polyfill.installAll();
+      
+      // Check if browser is supported
+      if (!shaka.Player.isBrowserSupported()) {
+        showToast('Browser not supported for DASH playback', 'error');
+      }
+      
       // Initialize Element SDK
       if (window.elementSdk) {
         window.elementSdk.init({
@@ -628,5 +644,5 @@
 
     initApp();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c53c0fd9492527e',t:'MTc2OTYzNzUzNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c57ddfcc06fcdf9',t:'MTc2OTY4MDY2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
